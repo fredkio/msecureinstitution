@@ -179,7 +179,7 @@ export const InstitutionSidebar: React.FC = () => {
                   activeView === 'chat' ? 'text-emerald-400 font-bold bg-emerald-950/40' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Conversations
+                Chat
               </button>
               <button
                 onClick={() => setActiveView('inbox')}
@@ -187,8 +187,16 @@ export const InstitutionSidebar: React.FC = () => {
                   activeView === 'inbox' ? 'text-emerald-400 font-bold bg-emerald-950/40' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                <span>Formal Inboxes</span>
+                <span>Inbox</span>
                 {unreadMessagesCount > 0 && <span className="font-bold text-[#008751]">{unreadMessagesCount}</span>}
+              </button>
+              <button
+                onClick={() => setActiveView('exchange')}
+                className={`w-full text-left py-1.5 px-3 rounded-lg text-xs transition cursor-pointer flex justify-between ${
+                  activeView === 'exchange' ? 'bg-[#008751] text-white font-bold rounded-lg shadow-sm' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>Message Exchange</span>
               </button>
             </div>
           )}

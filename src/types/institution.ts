@@ -37,6 +37,7 @@ export type ServiceModule =
   | 'home'
   | 'chat'
   | 'inbox'
+  | 'exchange'
   | 'directory'
   | 'markets'
   | 'rfqs'
@@ -496,4 +497,24 @@ export interface MarketQuote {
   tenor: string;
   coupon?: number;
   maturityDate: string;
+}
+
+// 12. MESSAGE EXCHANGE (Trade Funds Movement)
+export interface ExchangeMessage {
+  id: string; // e.g. MSG-20260909-DEF908CA
+  type: 'SMCTC100' | 'SMCTC202' | 'SMCTC103';
+  direction: 'IN' | 'OUT';
+  counterpartyInstitutionId: InstitutionId;
+  counterpartyInstitutionName: string;
+  currency: 'NGN' | 'USD';
+  amount: number;
+  sendingCustomerName: string;
+  sendingAccountNo: string;
+  beneficiaryCustomerName: string;
+  beneficiaryAccountNo: string;
+  processingRole: string;
+  forwardedBankCode?: string;
+  status: 'Pending' | 'Authorized' | 'Acknowledged' | 'Rejected';
+  date: string;
+  createdBy: string;
 }

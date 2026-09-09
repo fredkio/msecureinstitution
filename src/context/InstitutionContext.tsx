@@ -18,7 +18,8 @@ import {
   AuditLogItem,
   DelegatedAuthority,
   SensitiveAccessRequest,
-  MarketQuote
+  MarketQuote,
+  ExchangeMessage
 } from '../types/institution';
 import {
   INITIAL_PERSONAS,
@@ -112,6 +113,7 @@ interface InstitutionContextType {
   chatThreads: ChatThread[];
   chatMessages: Record<string, ChatMessage[]>;
   formalMessages: FormalMessage[];
+  exchangeMessages: ExchangeMessage[];
   correspondenceList: OfficialCorrespondence[];
   casesList: InstitutionalCase[];
   rfqsList: RFQRequest[];
@@ -123,6 +125,12 @@ interface InstitutionContextType {
   delegationsList: DelegatedAuthority[];
   sensitiveRequestsList: SensitiveAccessRequest[];
   notifications: NotificationToast[];
+
+  // Message Exchange Actions (Funds Movement)
+  createExchangeMessage: (msg: Partial<ExchangeMessage>) => string;
+  authorizeExchangeMessage: (msgId: string) => void;
+  acknowledgeExchangeMessage: (msgId: string) => void;
+  rejectExchangeMessage: (msgId: string, reason?: string) => void;
 
   // Action Dispatchers
   sendChatMessage: (threadId: string, text: string, classification?: ChatMessage['classification'], actionLink?: ChatMessage['actionLink'], attachments?: ChatMessage['attachments']) => void;
@@ -236,6 +244,195 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [chatThreads, setChatThreads] = useState<ChatThread[]>(INITIAL_CHAT_THREADS);
   const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>(INITIAL_CHAT_MESSAGES);
   const [formalMessages, setFormalMessages] = useState<FormalMessage[]>(INITIAL_FORMAL_MESSAGES);
+  const [exchangeMessages, setExchangeMessages] = useState<ExchangeMessage[]>([
+    {
+      id: 'MSG-20260909-DEF908CA',
+      type: 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 2000.00,
+      sendingCustomerName: 'Dangote Industries Ltd',
+      sendingAccountNo: '1092837465',
+      beneficiaryCustomerName: 'Africa Logistics Corp',
+      beneficiaryAccountNo: 'US9283746501',
+      processingRole: 'ORIGINATING_DESK',
+      status: 'Authorized',
+      date: '9/9/2026',
+      createdBy: 'Tunde Adebayo'
+    },
+    {
+      id: 'MSG-20260903-A72F8A5D',
+      type: 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 300.00,
+      sendingCustomerName: 'Bua Group Ltd',
+      sendingAccountNo: '0029384712',
+      beneficiaryCustomerName: 'Global Trade Ltd',
+      beneficiaryAccountNo: 'US0029384712',
+      processingRole: 'ORIGINATING_DESK',
+      status: 'Pending',
+      date: '9/3/2026',
+      createdBy: 'Tunde Adebayo'
+    },
+    {
+      id: 'MSG-20260902-7B5B6784',
+      type: 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 2000.00,
+      sendingCustomerName: 'TotalEnergies Marketing',
+      sendingAccountNo: '0129384756',
+      beneficiaryCustomerName: 'Offshore Energy Corp',
+      beneficiaryAccountNo: 'US0129384756',
+      processingRole: 'ORIGINATING_DESK',
+      status: 'Pending',
+      date: '9/2/2026',
+      createdBy: 'Tunde Adebayo'
+    },
+    {
+      id: 'MSG-20260901-2266E201',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 500.00,
+      sendingCustomerName: 'Standard Chartered UK',
+      sendingAccountNo: 'UK882938471',
+      beneficiaryCustomerName: 'Nestoil Nigeria Ltd',
+      beneficiaryAccountNo: '0029384812',
+      processingRole: 'BENEFICIARY_DESK',
+      status: 'Acknowledged',
+      date: '9/1/2026',
+      createdBy: 'Ngozi Umeh'
+    },
+    {
+      id: 'MSG-20260901-86BC911B',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 1000000.00,
+      sendingCustomerName: 'Citi Bank NY',
+      sendingAccountNo: 'US100293847',
+      beneficiaryCustomerName: 'Nigerian National Petroleum Company',
+      beneficiaryAccountNo: '0019283746',
+      processingRole: 'BENEFICIARY_DESK',
+      status: 'Acknowledged',
+      date: '9/1/2026',
+      createdBy: 'Ngozi Umeh'
+    },
+    {
+      id: 'MSG-20260829-B3F6D95B',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 5000.00,
+      sendingCustomerName: 'JPMorgan Chase',
+      sendingAccountNo: 'US882910293',
+      beneficiaryCustomerName: 'Flour Mills of Nigeria',
+      beneficiaryAccountNo: '0039281726',
+      processingRole: 'BENEFICIARY_DESK',
+      status: 'Authorized',
+      date: '8/29/2026',
+      createdBy: 'Ngozi Umeh'
+    },
+    {
+      id: 'MSG-20260829-316FB675',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 23481.73,
+      sendingCustomerName: 'BNP Paribas Paris',
+      sendingAccountNo: 'FR992019283',
+      beneficiaryCustomerName: 'Lafarge Africa Plc',
+      beneficiaryAccountNo: '0049281723',
+      processingRole: 'BENEFICIARY_DESK',
+      status: 'Authorized',
+      date: '8/29/2026',
+      createdBy: 'Ngozi Umeh'
+    },
+    {
+      id: 'MSG-20260829-A1362C0C',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'NGN',
+      amount: 100000000.25,
+      sendingCustomerName: 'Central Bank Settlement Treasury',
+      sendingAccountNo: 'CBN0019283',
+      beneficiaryCustomerName: 'Meridian Treasury Liquidity Account',
+      beneficiaryAccountNo: '0001928374',
+      processingRole: 'INTERMEDIARY',
+      status: 'Authorized',
+      date: '8/29/2026',
+      createdBy: 'Grace Mohammed'
+    },
+    {
+      id: 'MSG-20260829-4D9DD5D0',
+      type: 'SMCTC100',
+      direction: 'IN',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'NGN',
+      amount: 7000000.00,
+      sendingCustomerName: 'Federal Ministry of Finance',
+      sendingAccountNo: 'FMF0019283',
+      beneficiaryCustomerName: 'State Revenue Allocation Desk',
+      beneficiaryAccountNo: '0011223344',
+      processingRole: 'BENEFICIARY_DESK',
+      status: 'Acknowledged',
+      date: '8/29/2026',
+      createdBy: 'Grace Mohammed'
+    },
+    {
+      id: 'MSG-20260829-2AB2755C',
+      type: 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'NGN',
+      amount: 500000.00,
+      sendingCustomerName: 'Innoson Vehicle Mfg',
+      sendingAccountNo: '0033221100',
+      beneficiaryCustomerName: 'Auto Parts Suppliers Ltd',
+      beneficiaryAccountNo: '0099887766',
+      processingRole: 'ORIGINATING_DESK',
+      status: 'Authorized',
+      date: '8/29/2026',
+      createdBy: 'Tunde Adebayo'
+    },
+    {
+      id: 'MSG-20260829-D5CC536B',
+      type: 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: 'SUMMIT_BANK',
+      counterpartyInstitutionName: 'Summit Bank Plc',
+      currency: 'USD',
+      amount: 2560.00,
+      sendingCustomerName: 'Seplat Energy Plc',
+      sendingAccountNo: '0044556677',
+      beneficiaryCustomerName: 'Offshore Drilling Corp',
+      beneficiaryAccountNo: 'US0044556677',
+      processingRole: 'ORIGINATING_DESK',
+      status: 'Authorized',
+      date: '8/29/2026',
+      createdBy: 'Tunde Adebayo'
+    }
+  ]);
   const [correspondenceList, setCorrespondenceList] = useState<OfficialCorrespondence[]>(INITIAL_CORRESPONDENCE);
   const [casesList, setCasesList] = useState<InstitutionalCase[]>(INITIAL_CASES);
   const [rfqsList, setRfqsList] = useState<RFQRequest[]>(INITIAL_RFQS);
@@ -412,6 +609,61 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Message Exchange Actions (Trade Funds Movement)
+  const createExchangeMessage = (msgData: Partial<ExchangeMessage>): string => {
+    const todayStr = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    const msgId = `MSG-20260909-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+
+    const newMsg: ExchangeMessage = {
+      id: msgId,
+      type: msgData.type || 'SMCTC100',
+      direction: 'OUT',
+      counterpartyInstitutionId: msgData.counterpartyInstitutionId || 'SUMMIT_BANK',
+      counterpartyInstitutionName: msgData.counterpartyInstitutionName || 'Summit Bank Plc',
+      currency: msgData.currency || 'USD',
+      amount: msgData.amount || 2000.00,
+      sendingCustomerName: msgData.sendingCustomerName || activePersona.name,
+      sendingAccountNo: msgData.sendingAccountNo || '1092837465',
+      beneficiaryCustomerName: msgData.beneficiaryCustomerName || 'Beneficiary Customer',
+      beneficiaryAccountNo: msgData.beneficiaryAccountNo || 'US0029384756',
+      processingRole: msgData.processingRole || 'ORIGINATING_DESK',
+      forwardedBankCode: msgData.forwardedBankCode,
+      status: 'Pending',
+      date: todayStr,
+      createdBy: activePersona.name
+    };
+
+    setExchangeMessages(prev => [newMsg, ...prev]);
+
+    addAuditLog('CREATE_EXCHANGE_MESSAGE', 'MESSAGE', msgId, {
+      next: `Created ${newMsg.currency} ${newMsg.amount.toLocaleString()} transfer in favor of ${newMsg.beneficiaryCustomerName}`
+    });
+    addNotification(
+      'Funds Movement Message Created',
+      `Message ${msgId} (${newMsg.currency} ${newMsg.amount.toLocaleString()}) created and queued for authorization.`,
+      'SUCCESS'
+    );
+    return msgId;
+  };
+
+  const authorizeExchangeMessage = (msgId: string) => {
+    setExchangeMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: 'Authorized' } : m));
+    addAuditLog('AUTHORIZE_EXCHANGE_MESSAGE', 'MESSAGE', msgId, { next: 'Status: Authorized' });
+    addNotification('Message Authorized', `Funds movement message ${msgId} authorized for interbank settlement.`, 'SUCCESS');
+  };
+
+  const acknowledgeExchangeMessage = (msgId: string) => {
+    setExchangeMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: 'Acknowledged' } : m));
+    addAuditLog('ACKNOWLEDGE_EXCHANGE_MESSAGE', 'MESSAGE', msgId, { next: 'Status: Acknowledged' });
+    addNotification('Message Acknowledged', `Message ${msgId} acknowledged by counterparty bank.`, 'INFO');
+  };
+
+  const rejectExchangeMessage = (msgId: string, reason: string = 'Rejected by compliance policy') => {
+    setExchangeMessages(prev => prev.map(m => m.id === msgId ? { ...m, status: 'Rejected' } : m));
+    addAuditLog('REJECT_EXCHANGE_MESSAGE', 'MESSAGE', msgId, { next: `Reason: ${reason}` });
+    addNotification('Message Rejected', `Message ${msgId} rejected: ${reason}`, 'WARNING');
+  };
 
   // 1. CHAT ACTIONS
   const sendChatMessage = (
@@ -1833,6 +2085,11 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         chatThreads,
         chatMessages,
         formalMessages,
+        exchangeMessages,
+        createExchangeMessage,
+        authorizeExchangeMessage,
+        acknowledgeExchangeMessage,
+        rejectExchangeMessage,
         correspondenceList,
         casesList,
         rfqsList,

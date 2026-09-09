@@ -15,6 +15,7 @@ import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
 import { ChatWorkspaceView } from './views/ChatWorkspaceView';
 import { MessagesInboxView } from './views/MessagesInboxView';
+import { MessageExchangeView } from './views/MessageExchangeView';
 import { DirectoryView } from './views/DirectoryView';
 import { MarketsWorkspaceView } from './views/MarketsWorkspaceView';
 import { RFQWorkspaceView } from './views/RFQWorkspaceView';
@@ -45,6 +46,8 @@ const MainLayout: React.FC = () => {
         return <ChatWorkspaceView />;
       case 'inbox':
         return <MessagesInboxView />;
+      case 'exchange':
+        return <MessageExchangeView />;
       case 'directory':
         return <DirectoryView />;
       case 'markets':
