@@ -11,6 +11,7 @@ import { GlobalSearchModal } from './components/modals/GlobalSearchModal';
 import { ScenarioRunnerModal } from './components/modals/ScenarioRunnerModal';
 
 // Views
+import { LoginView } from './views/LoginView';
 import { DashboardView } from './views/DashboardView';
 import { ChatWorkspaceView } from './views/ChatWorkspaceView';
 import { MessagesInboxView } from './views/MessagesInboxView';
@@ -30,7 +31,11 @@ import { ScenarioLabView } from './views/ScenarioLabView';
 import { ReportsView } from './views/ReportsView';
 
 const MainLayout: React.FC = () => {
-  const { activeView } = useInstitution();
+  const { activeView, isAuthenticated } = useInstitution();
+
+  if (!isAuthenticated || activeView === 'login') {
+    return <LoginView />;
+  }
 
   const renderActiveView = () => {
     switch (activeView) {

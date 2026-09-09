@@ -93,6 +93,11 @@ interface InstitutionContextType {
   openStepUpAuth: (title: string, prompt: string, onConfirm: () => void) => void;
   closeStepUpAuth: () => void;
 
+  // Authentication
+  isAuthenticated: boolean;
+  loginWithOtp: (email: string, otp: string) => boolean;
+  logout: () => void;
+
   // Scenario Lab
   isScenarioLabOpen: boolean;
   setIsScenarioLabOpen: (open: boolean) => void;
@@ -182,6 +187,37 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [activeInstitutionId, setActiveInstitutionId] = useState<InstitutionId>('MERIDIAN_BANK');
   const [activePersonaId, setActivePersonaId] = useState<PersonaId>('tunde_adebayo');
   const [activeView, setActiveView] = useState<ServiceModule>('home');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+
+  const loginWithOtp = (email: string, otp: string): boolean => {
+    if (otp !== '999999') {
+      return false;
+    }
+
+    const lower = email.toLowerCase();
+    if (lower.includes('summit')) {
+      setActiveInstitutionId('SUMMIT_BANK');
+      setActivePersonaId('ngozi_umeh');
+    } else if (lower.includes('horizon')) {
+      setActiveInstitutionId('HORIZON_MFB');
+      setActivePersonaId('mary_okoye');
+    } else if (lower.includes('frsa') || lower.includes('cbn') || lower.includes('mda')) {
+      setActiveInstitutionId('FRSA');
+      setActivePersonaId('grace_mohammed');
+    } else {
+      setActiveInstitutionId('MERIDIAN_BANK');
+      setActivePersonaId('tunde_adebayo');
+    }
+
+    setIsAuthenticated(true);
+    setActiveView('home');
+    return true;
+  };
+
+  const logout = () => {
+    setIsAuthenticated(false);
+    setActiveView('login');
+  };
 
   // Modals & UI States
   const [isComposerOpen, setIsComposerOpen] = useState(false);
@@ -1783,6 +1819,9 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
         stepUpData,
         openStepUpAuth,
         closeStepUpAuth,
+        isAuthenticated,
+        loginWithOtp,
+        logout,
         isScenarioLabOpen,
         setIsScenarioLabOpen,
         activeScenarioId,

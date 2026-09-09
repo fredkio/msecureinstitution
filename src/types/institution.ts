@@ -33,6 +33,7 @@ export type PersonaId =
   | 'frsa_admin';        // Institution Administrator
 
 export type ServiceModule = 
+  | 'login'
   | 'home'
   | 'chat'
   | 'inbox'
