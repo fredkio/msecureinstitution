@@ -9,7 +9,17 @@ import {
   Clock,
   ShieldCheck,
   Building2,
-  Plus
+  Plus,
+  Radio,
+  Search,
+  ChevronDown,
+  Send,
+  Bold,
+  Italic,
+  Underline,
+  Strikethrough,
+  List,
+  ListOrdered
 } from 'lucide-react';
 
 export const NoticesView: React.FC = () => {
@@ -21,142 +31,298 @@ export const NoticesView: React.FC = () => {
     activeInstitution
   } = useInstitution();
 
-  const [selectedNoticeId, setSelectedNoticeId] = useState<string>(noticesList[0]?.id || 'MSC-NOT-881');
+  const [activeTab, setActiveTab] = useState<'LIST' | 'COMPOSE'>('LIST');
+  const [channel, setChannel] = useState<'Email' | 'Notification' | 'SMS'>('Email');
+  const [selectedTargets, setSelectedTargets] = useState({
+    mdCeo: true,
+    compliance: true,
+    info: false
+  });
+  const [subject, setSubject] = useState('');
+  const [bodyText, setBodyText] = useState('');
 
-  const currentNotice = noticesList.find(n => n.id === selectedNoticeId) || noticesList[0];
-  const isAcknowledgedByMe = currentNotice?.acknowledgedBy.includes(activePersona.id);
+  // Sample broadcast records matching exact screenshot reference format
+  const broadcasts = [
+    {
+      id: 'BC-202609-0004',
+      subject: 'Review of Document from Fred Department',
+      channel: 'Notification',
+      scope: 'Sector',
+      status: 'Sent',
+      recipients: 9,
+      created: '9/9/2026'
+    },
+    {
+      id: 'BC-202609-0003',
+      subject: 'Compliance to ISO20022 Standards',
+      channel: 'Notification',
+      scope: 'Sector',
+      status: 'Sent',
+      recipients: 9,
+      created: '9/7/2026'
+    },
+    {
+      id: 'BC-202609-0002',
+      subject: 'Interbank Settlement Window Maintenance Notice',
+      channel: 'Email',
+      scope: 'All Banks',
+      status: 'Sent',
+      recipients: 24,
+      created: '9/5/2026'
+    }
+  ];
 
   return (
-    <div className="h-full flex overflow-hidden bg-[#f8fafc] text-slate-900">
-      {/* Left: Notices List */}
-      <div className="w-96 bg-white border-r border-slate-200 flex flex-col h-full shrink-0">
-        <div className="p-5 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h2 className="font-extrabold text-base text-slate-900">Network Notices</h2>
-            <p className="text-xs text-slate-500">Official circulars & directives</p>
-          </div>
-          {activePersona.canManageUsers && (
-            <button
-              onClick={() => openComposer('notice')}
-              className="px-3 py-1.5 bg-[#05362a] hover:bg-emerald-900 text-white rounded-xl text-xs font-bold shadow-xs cursor-pointer"
-            >
-              + Broadcast
-            </button>
-          )}
+    <div className="p-8 space-y-6 text-slate-900 max-w-7xl mx-auto overflow-y-auto">
+      {/* Top Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-950">Broadcast</h1>
+          <p className="text-xs text-slate-500 mt-0.5 font-normal">
+            Compose and send broadcasts to organizations or platform users
+          </p>
         </div>
 
-        <div className="overflow-y-auto flex-1 divide-y divide-slate-100">
-          {noticesList.map((notice) => {
-            const isSelected = notice.id === selectedNoticeId;
-            const acknowledged = notice.acknowledgedBy.includes(activePersona.id);
-
-            return (
-              <div
-                key={notice.id}
-                onClick={() => setSelectedNoticeId(notice.id)}
-                className={`p-4 cursor-pointer transition text-left text-xs ${
-                  isSelected ? 'bg-emerald-50/60 border-l-4 border-[#05362a]' : 'hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-mono font-bold text-xs text-[#05362a]">{notice.id}</span>
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                    notice.priority === 'CRITICAL' ? 'bg-rose-50 text-rose-800' : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                    <span>{notice.type}</span>
-                  </span>
-                </div>
-
-                <div className="font-bold text-slate-900 text-xs truncate mt-1">{notice.title}</div>
-                <div className="text-[11px] text-slate-500 mt-1 truncate">
-                  Issuer: {notice.issuerInstitution}
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 font-mono">
-                  <span>{notice.issuedAt}</span>
-                  {acknowledged ? (
-                    <span className="text-emerald-700 font-bold">ACKNOWLEDGED ✓</span>
-                  ) : (
-                    <span className="text-amber-800 font-bold">ACTION REQUIRED</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Right: Notice Body */}
-      <div className="flex-1 flex flex-col h-full bg-[#f8fafc] overflow-hidden">
-        {currentNotice ? (
-          <>
-            {/* Top Ribbon */}
-            <div className="px-8 py-4 border-b border-slate-200 bg-white flex items-center justify-between shadow-xs">
-              <div className="flex items-center space-x-2">
-                <span className="font-mono font-bold text-sm text-[#05362a]">{currentNotice.id}</span>
-                <span className="text-slate-300">•</span>
-                <span className="text-xs text-slate-900 font-bold">{currentNotice.type}</span>
-              </div>
-
-              {!isAcknowledgedByMe && currentNotice.requiresAcknowledgement && (
-                <button
-                  onClick={() => acknowledgeNotice(currentNotice.id)}
-                  className="px-4 py-2 bg-[#05362a] hover:bg-emerald-900 text-white font-bold rounded-xl text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Acknowledge Official Directive</span>
-                </button>
-              )}
-            </div>
-
-            {/* Document Body */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-6 text-xs max-w-4xl mx-auto w-full">
-              <div className="p-8 bg-white border border-slate-200/90 rounded-3xl shadow-sm space-y-6">
-                <div className="text-center pb-6 border-b border-slate-100 space-y-1">
-                  <div className="font-mono text-xs font-bold text-[#05362a] uppercase tracking-widest">
-                    {currentNotice.issuerInstitution}
-                  </div>
-                  <h1 className="text-xl font-extrabold text-slate-950">{currentNotice.title}</h1>
-                  <div className="text-xs text-slate-500 font-mono pt-2">
-                    Department: {currentNotice.issuerDepartment} • Issued: {currentNotice.issuedAt}
-                  </div>
-                </div>
-
-                <div className="p-6 bg-slate-50 border border-slate-100 rounded-2xl leading-relaxed text-slate-800 text-xs whitespace-pre-wrap font-sans">
-                  {currentNotice.contentMarkdown}
-                </div>
-
-                {currentNotice.attachments && currentNotice.attachments.length > 0 && (
-                  <div className="space-y-2 pt-2">
-                    <div className="text-slate-400 font-bold text-[10px] uppercase font-mono">Official PDF Circular</div>
-                    {currentNotice.attachments.map((att) => (
-                      <div key={att.name} className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <FileText className="w-4 h-4 text-[#05362a]" />
-                          <span className="font-mono font-bold text-slate-900">{att.name}</span>
-                        </div>
-                        <span className="text-slate-400 font-mono text-[11px]">{att.size}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="p-4 bg-emerald-50/70 border border-emerald-200 rounded-2xl flex items-center justify-between text-[11px] font-mono">
-                  <span className="text-emerald-950 font-bold">Network Compliance Ledger:</span>
-                  <span className="text-[#05362a] font-extrabold">
-                    {currentNotice.acknowledgedBy.length} Authorized Signatories Acknowledged
-                  </span>
-                </div>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-slate-400 text-xs">
-            Select a network notice to inspect.
-          </div>
+        {activeTab === 'LIST' && (
+          <button
+            onClick={() => setActiveTab('COMPOSE')}
+            className="px-5 py-2.5 bg-[#008751] hover:bg-[#006e42] text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-2"
+          >
+            <Plus className="w-4 h-4 stroke-[2.5]" />
+            <span>+ New Broadcast</span>
+          </button>
         )}
       </div>
+
+      {activeTab === 'LIST' ? (
+        /* Broadcast Table View (Matching Screenshot 3) */
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                  <th className="py-4 px-6">REFERENCE</th>
+                  <th className="py-4 px-6">SUBJECT</th>
+                  <th className="py-4 px-4">CHANNEL</th>
+                  <th className="py-4 px-4">SCOPE</th>
+                  <th className="py-4 px-4">STATUS</th>
+                  <th className="py-4 px-4">RECIPIENTS</th>
+                  <th className="py-4 px-6">CREATED</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-sans">
+                {broadcasts.map((bc) => (
+                  <tr key={bc.id} className="hover:bg-slate-50/80 transition">
+                    <td className="py-4 px-6 font-mono font-semibold text-slate-600 text-[11px]">
+                      {bc.id}
+                    </td>
+
+                    <td className="py-4 px-6 font-bold text-slate-950">
+                      {bc.subject}
+                    </td>
+
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center px-2.5 py-1 bg-cyan-50 text-cyan-700 border border-cyan-200 rounded-full text-[10px] font-bold">
+                        {bc.channel}
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-4 text-slate-600 font-medium">
+                      {bc.scope}
+                    </td>
+
+                    <td className="py-4 px-4">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-bold">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+                        <span>{bc.status}</span>
+                      </span>
+                    </td>
+
+                    <td className="py-4 px-4 font-bold text-slate-800 font-mono">
+                      {bc.recipients}
+                    </td>
+
+                    <td className="py-4 px-6 font-mono text-slate-500 flex items-center justify-between">
+                      <span>{bc.created}</span>
+                      <ChevronDown className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-700" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        /* Compose Broadcast Form (Matching Screenshot 1) */
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-sm p-8 space-y-6 max-w-4xl">
+          <h2 className="font-extrabold text-base text-slate-950 border-b border-slate-100 pb-3">
+            Compose Broadcast
+          </h2>
+
+          <div className="space-y-5 text-xs">
+            {/* Channel Selection */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-700 font-bold">Channel</label>
+              <select
+                value={channel}
+                onChange={(e) => setChannel(e.target.value as any)}
+                className="w-64 bg-slate-50 border border-slate-300 rounded-xl p-2.5 text-slate-900 font-medium focus:outline-none focus:border-[#008751]"
+              >
+                <option value="Email">Email</option>
+                <option value="Notification">Notification</option>
+                <option value="SMS">SMS</option>
+              </select>
+            </div>
+
+            {/* Email Target Checkboxes */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-500 font-normal">
+                Email Target <span className="text-[11px] text-slate-400">(select which org email addresses to send to)</span>
+              </label>
+              <div className="flex items-center space-x-4 pt-1 font-bold text-slate-800">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedTargets.mdCeo}
+                    onChange={(e) => setSelectedTargets(prev => ({ ...prev, mdCeo: e.target.checked }))}
+                    className="w-4 h-4 accent-[#008751] rounded"
+                  />
+                  <span>MD / CEO</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedTargets.compliance}
+                    onChange={(e) => setSelectedTargets(prev => ({ ...prev, compliance: e.target.checked }))}
+                    className="w-4 h-4 accent-[#008751] rounded"
+                  />
+                  <span>Compliance</span>
+                </label>
+
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedTargets.info}
+                    onChange={(e) => setSelectedTargets(prev => ({ ...prev, info: e.target.checked }))}
+                    className="w-4 h-4 accent-[#008751] rounded"
+                  />
+                  <span>Info</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Recipients Selection */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <label className="block text-slate-700 font-bold">Recipients</label>
+                <button type="button" className="text-[#008751] font-bold text-xs hover:underline flex items-center gap-1 cursor-pointer">
+                  <span>+ Add Recipient</span>
+                </button>
+              </div>
+
+              <div className="p-5 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-3">
+                <div className="flex items-center space-x-2">
+                  <span className="text-slate-400 font-mono font-bold">1.</span>
+                  <select className="bg-white border border-slate-300 rounded-xl p-2 text-slate-900 font-bold">
+                    <option>Specific Organization</option>
+                    <option>Entire Banking Sector</option>
+                    <option>Regulatory Regimes</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 pl-6">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search organizations..."
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-2 text-slate-800 font-medium">
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="checkbox" defaultChecked className="w-3.5 h-3.5 accent-[#008751]" />
+                      <span>Bank National Plc</span>
+                    </label>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input type="checkbox" defaultChecked className="w-3.5 h-3.5 accent-[#008751]" />
+                      <span>Africa International Bank</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Subject */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-700 font-bold">Subject</label>
+              <input
+                type="text"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                placeholder="Broadcast subject..."
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 focus:outline-none focus:border-[#008751]"
+              />
+            </div>
+
+            {/* Body Rich Text Input */}
+            <div className="space-y-1.5">
+              <label className="block text-slate-700 font-bold">Body</label>
+              <div className="border border-slate-300 rounded-2xl overflow-hidden bg-white">
+                {/* Editor Toolbar */}
+                <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center space-x-3 text-slate-600">
+                  <span className="font-mono text-xs font-bold px-1.5 py-0.5 bg-white border border-slate-200 rounded">14 v</span>
+                  <div className="h-4 w-px bg-slate-300" />
+                  <button type="button" className="hover:text-slate-900 font-bold p-1">B</button>
+                  <button type="button" className="hover:text-slate-900 italic p-1">I</button>
+                  <button type="button" className="hover:text-slate-900 underline p-1">U</button>
+                  <button type="button" className="hover:text-slate-900 line-through p-1 font-bold">S</button>
+                  <div className="h-4 w-px bg-slate-300" />
+                  <button type="button" className="hover:text-slate-900 p-1">A</button>
+                  <button type="button" className="hover:text-slate-900 p-1">List</button>
+                </div>
+
+                <textarea
+                  rows={6}
+                  value={bodyText}
+                  onChange={(e) => setBodyText(e.target.value)}
+                  placeholder="Write your message..."
+                  className="w-full p-4 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none resize-none"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="flex justify-end items-center space-x-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setActiveTab('LIST')}
+                className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="px-5 py-2.5 bg-white hover:bg-blue-50 text-blue-700 border border-blue-300 rounded-xl font-bold cursor-pointer"
+              >
+                Preview Recipients
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  alert('Broadcast dispatched successfully to targeted institutions.');
+                  setActiveTab('LIST');
+                }}
+                className="px-6 py-2.5 bg-[#008751] hover:bg-[#006e42] text-white font-bold rounded-xl shadow-md cursor-pointer"
+              >
+                Save Draft & Send
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

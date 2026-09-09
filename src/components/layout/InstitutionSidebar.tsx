@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useInstitution } from '../../context/InstitutionContext';
 import { ServiceModule } from '../../types/institution';
 import {
@@ -22,7 +22,15 @@ import {
   CheckCircle,
   FileText,
   Plus,
-  Shield
+  Shield,
+  Radio,
+  ChevronDown,
+  ChevronRight,
+  Settings,
+  GitFork,
+  LogOut,
+  Sliders,
+  PanelLeftClose
 } from 'lucide-react';
 
 interface NavItemConfig {
@@ -30,7 +38,7 @@ interface NavItemConfig {
   label: string;
   icon: React.ElementType;
   badgeCount?: number;
-  category: 'WORKSPACE' | 'MARKETS' | 'OPERATIONS' | 'GOVERNANCE';
+  section: 'CORE' | 'MESSAGING' | 'MARKETS' | 'OPERATIONS' | 'GOVERNANCE';
 }
 
 export const InstitutionSidebar: React.FC = () => {
@@ -48,6 +56,18 @@ export const InstitutionSidebar: React.FC = () => {
     sensitiveRequestsList
   } = useInstitution();
 
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    APPROVALS: true,
+    MESSAGING: true,
+    COMMUNICATIONS: true,
+    OPERATIONS: true,
+    GOVERNANCE: true
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
   // Compute live badge counts
   const unreadMessagesCount = formalMessages.filter(m => m.status === 'DELIVERED').length;
   const activeCasesCount = casesList.filter(c => c.status !== 'CLOSED').length;
@@ -57,127 +77,286 @@ export const InstitutionSidebar: React.FC = () => {
     sensitiveRequestsList.filter(s => s.status === 'PENDING_CHECKER').length;
   const unacknowledgedNoticesCount = noticesList.filter(n => !n.acknowledgedBy.includes(activePersona.id)).length;
 
-  const allNavItems: NavItemConfig[] = [
-    // Workspace Category
-    { id: 'home', label: 'Dashboard', icon: LayoutDashboard, category: 'WORKSPACE' },
-    { id: 'chat', label: 'Conversations', icon: MessageSquare, badgeCount: 3, category: 'WORKSPACE' },
-    { id: 'inbox', label: 'Inboxes', icon: Inbox, badgeCount: unreadMessagesCount || undefined, category: 'WORKSPACE' },
-    { id: 'directory', label: 'Directory', icon: Building2, category: 'WORKSPACE' },
-
-    // Markets & Treasury
-    { id: 'markets', label: 'Markets Board', icon: TrendingUp, category: 'MARKETS' },
-    { id: 'rfqs', label: 'Treasury RFQs', icon: Send, category: 'MARKETS' },
-    { id: 'tickets', label: 'Trade Tickets', icon: Ticket, category: 'MARKETS' },
-    { id: 'blotter', label: 'Trade Blotter', icon: FileSpreadsheet, category: 'MARKETS' },
-    { id: 'settlement', label: 'Settlement Calendar', icon: CalendarDays, category: 'MARKETS' },
-
-    // Operations & Bilateral Objects
-    { id: 'cases', label: 'Case Management', icon: FolderLock, badgeCount: activeCasesCount || undefined, category: 'OPERATIONS' },
-    { id: 'correspondence', label: 'Official Correspondence', icon: ScrollText, category: 'OPERATIONS' },
-    { id: 'requests', label: 'Official Requests', icon: FileText, category: 'OPERATIONS' },
-    { id: 'submissions', label: 'Data Submissions', icon: FileCheck2, category: 'OPERATIONS' },
-    { id: 'notices', label: 'Network Notices', icon: BellRing, badgeCount: unacknowledgedNoticesCount || undefined, category: 'OPERATIONS' },
-
-    // Governance & Administration
-    { id: 'approvals', label: 'Requests & Approvals', icon: CheckCircle, badgeCount: pendingApprovalsCount || undefined, category: 'GOVERNANCE' },
-    { id: 'reports', label: 'Reports', icon: BarChart3, category: 'GOVERNANCE' },
-    { id: 'admin', label: 'Administration', icon: Users2, category: 'GOVERNANCE' },
-    { id: 'security', label: 'Security Centre', icon: ShieldAlert, category: 'GOVERNANCE' },
-    { id: 'scenarios', label: 'Scenario Lab', icon: FlaskConical, category: 'GOVERNANCE' }
-  ];
-
-  // Filter items strictly by active persona & active institution entitlements
-  const visibleItems = allNavItems.filter(item => {
-    const instHasService = activeInstitution.enabledServices.includes(item.id);
-    const personaHasService = activePersona.allowedServices.includes(item.id);
-    return instHasService && personaHasService;
-  });
-
-  const categories: { key: NavItemConfig['category']; title: string }[] = [
-    { key: 'WORKSPACE', title: 'WORKSPACE' },
-    { key: 'MARKETS', title: 'MARKETS & TREASURY' },
-    { key: 'OPERATIONS', title: 'OPERATIONS & CORRESPONDENCE' },
-    { key: 'GOVERNANCE', title: 'GOVERNANCE & AUDIT' }
-  ];
-
   return (
-    <aside className="w-64 bg-[#05362a] text-emerald-100 flex flex-col h-full overflow-y-auto select-none py-5 px-3 border-r border-[#042d23] shrink-0">
-      {/* Brand Header */}
-      <div className="px-3 pb-5 flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center font-extrabold text-sm text-emerald-300 shadow-inner">
-          {activeInstitution.code}
-        </div>
-        <div className="min-w-0">
-          <div className="font-bold text-white text-sm tracking-tight truncate flex items-center gap-1">
-            <span>{activeInstitution.displayName}</span>
-          </div>
-          <div className="text-[10px] font-medium text-emerald-300/70 uppercase tracking-wider truncate">
-            {activeInstitution.typeLabel.split('(')[0]}
-          </div>
-        </div>
-      </div>
+    <aside className="w-64 bg-[#020b08] text-slate-200 flex flex-col h-full overflow-y-auto select-none py-5 px-3 border-r border-emerald-950/40 shrink-0 relative">
+      {/* Subtle Digital Mesh Overlay in Background */}
+      <div 
+        className="absolute inset-0 pointer-events-none opacity-20 bg-cover bg-center mix-blend-screen"
+        style={{
+          backgroundImage: `radial-gradient(circle at 20% 40%, rgba(0, 135, 81, 0.4) 0%, transparent 60%), radial-gradient(circle at 80% 80%, rgba(4, 120, 87, 0.3) 0%, transparent 50%)`
+        }}
+      />
 
-      {/* Prominent Primary + NEW Action Button */}
-      <div className="px-2 pb-5">
-        <button
-          onClick={() => openComposer()}
-          className="w-full py-2.5 px-4 bg-[#10b981] hover:bg-[#059669] text-slate-950 font-bold text-xs rounded-xl shadow-md transition transform active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Plus className="w-4 h-4 text-slate-950 stroke-[2.5]" />
-          <span>+ Action / Mandate</span>
+      {/* Sovereign Messages Header */}
+      <div className="px-3 pb-5 flex items-center justify-between relative z-10">
+        <div className="flex items-center space-x-2.5">
+          <div className="w-9 h-9 rounded-xl bg-emerald-900/40 border border-emerald-500/40 flex items-center justify-center font-black text-emerald-400 shadow-xs">
+            <Shield className="w-5 h-5 text-[#008751]" />
+          </div>
+          <div>
+            <div className="font-extrabold text-white text-sm tracking-tight leading-none">
+              Sovereign Messages
+            </div>
+            <div className="inline-block mt-1 px-1.5 py-0.2 bg-emerald-950/80 text-emerald-400 text-[9px] font-bold rounded border border-emerald-800/60 uppercase font-mono">
+              {activeInstitution.code || 'Organization'}
+            </div>
+          </div>
+        </div>
+
+        <button className="text-slate-400 hover:text-white p-1 rounded-lg transition cursor-pointer">
+          <PanelLeftClose className="w-4 h-4" />
         </button>
       </div>
 
-      {/* Navigation Sections */}
-      <div className="flex-1 space-y-5 px-1">
-        {categories.map((cat) => {
-          const itemsInCat = visibleItems.filter(i => i.category === cat.key);
-          if (itemsInCat.length === 0) return null;
+      {/* Navigation Links */}
+      <div className="flex-1 space-y-1 px-1 relative z-10 text-xs">
+        {/* Dashboard */}
+        <button
+          onClick={() => setActiveView('home')}
+          className={`w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'home'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <LayoutDashboard className="w-4 h-4 shrink-0" />
+          <span>Dashboard</span>
+        </button>
 
-          return (
-            <div key={cat.key} className="space-y-1">
-              <div className="px-3 text-[10px] font-bold tracking-wider text-emerald-400/60 uppercase">
-                {cat.title}
-              </div>
-
-              <div className="space-y-0.5">
-                {itemsInCat.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activeView === item.id;
-
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveView(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition text-left cursor-pointer group ${
-                        isActive
-                          ? 'bg-white/15 text-white font-bold shadow-inner border border-white/10'
-                          : 'text-emerald-100/70 hover:text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <Icon className={`w-4 h-4 shrink-0 transition ${isActive ? 'text-emerald-300' : 'text-emerald-300/60 group-hover:text-emerald-200'}`} />
-                        <span className="truncate">{item.label}</span>
-                      </div>
-
-                      {item.badgeCount ? (
-                        <span className="px-2 py-0.5 text-[10px] font-bold text-white rounded-full bg-emerald-600/80 shadow-sm">
-                          {item.badgeCount}
-                        </span>
-                      ) : null}
-                    </button>
-                  );
-                })}
-              </div>
+        {/* Approvals */}
+        <div className="space-y-0.5">
+          <button
+            onClick={() => {
+              setActiveView('approvals');
+              toggleSection('APPROVALS');
+            }}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+              activeView === 'approvals'
+                ? 'bg-[#008751] text-white shadow-md font-bold'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-4 h-4 shrink-0" />
+              <span>Approvals</span>
             </div>
-          );
-        })}
+            <div className="flex items-center space-x-1.5">
+              {pendingApprovalsCount > 0 && (
+                <span className="px-1.5 py-0.2 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full">
+                  {pendingApprovalsCount}
+                </span>
+              )}
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+            </div>
+          </button>
+        </div>
+
+        {/* Messaging */}
+        <div className="space-y-0.5">
+          <button
+            onClick={() => {
+              setActiveView('chat');
+              toggleSection('MESSAGING');
+            }}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+              activeView === 'chat' || activeView === 'inbox'
+                ? 'bg-[#008751] text-white shadow-md font-bold'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <MessageSquare className="w-4 h-4 shrink-0" />
+              <span>Messaging</span>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {expandedSections.MESSAGING && (
+            <div className="pl-9 space-y-1 pt-0.5">
+              <button
+                onClick={() => setActiveView('chat')}
+                className={`w-full text-left py-1.5 px-3 rounded-lg text-xs transition cursor-pointer ${
+                  activeView === 'chat' ? 'text-emerald-400 font-bold bg-emerald-950/40' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Conversations
+              </button>
+              <button
+                onClick={() => setActiveView('inbox')}
+                className={`w-full text-left py-1.5 px-3 rounded-lg text-xs transition cursor-pointer flex justify-between ${
+                  activeView === 'inbox' ? 'text-emerald-400 font-bold bg-emerald-950/40' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>Formal Inboxes</span>
+                {unreadMessagesCount > 0 && <span className="font-bold text-[#008751]">{unreadMessagesCount}</span>}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* User Management / Directory */}
+        <button
+          onClick={() => setActiveView('directory')}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'directory'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <Users2 className="w-4 h-4 shrink-0" />
+            <span>User Management</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+        </button>
+
+        {/* Markets & Treasury */}
+        <button
+          onClick={() => setActiveView('markets')}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'markets' || activeView === 'tickets' || activeView === 'blotter'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <TrendingUp className="w-4 h-4 shrink-0" />
+            <span>Markets & Blotter</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+        </button>
+
+        {/* Communications (Expanded to Broadcast & Notifications as in Screenshot) */}
+        <div className="space-y-0.5">
+          <button
+            onClick={() => toggleSection('COMMUNICATIONS')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+              activeView === 'notices'
+                ? 'text-white bg-white/5'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <div className="flex items-center space-x-3">
+              <Radio className="w-4 h-4 shrink-0 text-emerald-400" />
+              <span>Communications</span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {expandedSections.COMMUNICATIONS && (
+            <div className="pl-4 space-y-1 pt-0.5">
+              <button
+                onClick={() => setActiveView('notices')}
+                className={`w-full flex items-center space-x-2.5 px-3.5 py-2 text-xs rounded-xl transition cursor-pointer ${
+                  activeView === 'notices'
+                    ? 'bg-[#008751] text-white font-bold shadow-md'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>Broadcast</span>
+              </button>
+              <button
+                onClick={() => setActiveView('requests')}
+                className="w-full flex items-center space-x-2.5 px-3.5 py-2 text-xs rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition cursor-pointer"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-600" />
+                <span>Notifications</span>
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Case & Discrepancy Operations */}
+        <button
+          onClick={() => setActiveView('cases')}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'cases'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <FolderLock className="w-4 h-4 shrink-0" />
+            <span>Disputes & Cases</span>
+          </div>
+          {activeCasesCount > 0 && (
+            <span className="px-1.5 py-0.2 text-[10px] font-bold bg-amber-500 text-slate-950 rounded-full">
+              {activeCasesCount}
+            </span>
+          )}
+        </button>
+
+        {/* Statutory Correspondence */}
+        <button
+          onClick={() => setActiveView('correspondence')}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'correspondence'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <ScrollText className="w-4 h-4 shrink-0" />
+            <span>Official Correspondence</span>
+          </div>
+        </button>
+
+        {/* Reports & Analytics */}
+        <button
+          onClick={() => setActiveView('reports')}
+          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl font-semibold transition text-left cursor-pointer ${
+            activeView === 'reports'
+              ? 'bg-[#008751] text-white shadow-md font-bold'
+              : 'text-slate-300 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="flex items-center space-x-3">
+            <BarChart3 className="w-4 h-4 shrink-0" />
+            <span>Reports & Analytics</span>
+          </div>
+          <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+        </button>
       </div>
 
-      {/* Bottom Watermark */}
-      <div className="mt-auto pt-4 px-3 text-[10px] text-emerald-300/50 border-t border-emerald-800/30">
-        <div className="truncate font-medium">Prototype build for institutional discovery</div>
-        <div className="text-[9px] text-emerald-400/40 mt-0.5">mSecure Trust Mesh • End-to-End Audited</div>
+      {/* Prominent Primary Action Button (+ New Action / Broadcast) */}
+      <div className="px-2 pt-4 pb-2 relative z-10">
+        <button
+          onClick={() => openComposer()}
+          className="w-full py-2.5 px-4 bg-[#008751] hover:bg-[#006e42] text-white font-bold text-xs rounded-xl shadow-md transition transform active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Plus className="w-4 h-4 text-white stroke-[2.5]" />
+          <span>+ New Action / Mandate</span>
+        </button>
+      </div>
+
+      {/* Bottom Profile Footer (Matching exact screenshot layout) */}
+      <div className="mt-auto pt-4 px-3 border-t border-emerald-950/60 relative z-10 flex items-center justify-between">
+        <div>
+          <div className="font-extrabold text-white text-xs truncate">
+            {activePersona.name}
+          </div>
+          <div className="text-[11px] text-slate-400 truncate">
+            {activeInstitution.displayName}
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-2 text-slate-400">
+          <button
+            onClick={() => setActiveView('security')}
+            className="hover:text-white p-1 rounded-lg transition cursor-pointer"
+            title="Settings & Security"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setActiveView('scenarios')}
+            className="hover:text-white p-1 rounded-lg transition cursor-pointer"
+            title="Switch Persona / Exit"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </aside>
   );
