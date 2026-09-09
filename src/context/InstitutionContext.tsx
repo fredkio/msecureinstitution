@@ -187,7 +187,7 @@ export const InstitutionProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [activeInstitutionId, setActiveInstitutionId] = useState<InstitutionId>('MERIDIAN_BANK');
   const [activePersonaId, setActivePersonaId] = useState<PersonaId>('tunde_adebayo');
   const [activeView, setActiveView] = useState<ServiceModule>('home');
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   const loginWithOtp = (email: string, otp: string): boolean => {
     if (otp !== '999999') {

@@ -12,7 +12,8 @@ export const DevToolbar: React.FC = () => {
     switchPersona,
     switchCounterpartyPerspective,
     setIsScenarioLabOpen,
-    resetAllState
+    resetAllState,
+    logout
   } = useInstitution();
 
   const getCounterpartySuggestion = () => {
@@ -98,6 +99,15 @@ export const DevToolbar: React.FC = () => {
         >
           <FlaskConical className="w-3.5 h-3.5 text-amber-400" />
           <span>SCENARIO LAB</span>
+        </button>
+
+        {/* LOGOUT / LOGIN PAGE BUTTON */}
+        <button
+          onClick={logout}
+          className="flex items-center gap-1 px-2.5 py-1 bg-rose-950/60 hover:bg-rose-900/80 text-rose-200 border border-rose-800/60 rounded-lg font-bold transition cursor-pointer text-xs"
+          title="Return to NSMessages Login Page"
+        >
+          <span>LOGOUT / LOGIN PAGE 🔒</span>
         </button>
 
         {/* RESET STATE */}

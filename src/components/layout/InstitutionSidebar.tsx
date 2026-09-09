@@ -95,7 +95,7 @@ export const InstitutionSidebar: React.FC = () => {
           </div>
           <div>
             <div className="font-extrabold text-white text-sm tracking-tight leading-none">
-              Sovereign Messages
+              NSMessages
             </div>
             <div className="inline-block mt-1 px-1.5 py-0.2 bg-emerald-950/80 text-emerald-400 text-[9px] font-bold rounded border border-emerald-800/60 uppercase font-mono">
               {activeInstitution.code || 'Organization'}
